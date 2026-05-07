@@ -1866,6 +1866,7 @@ const Reviews = () => {
   const [comment, setComment] = useState('');
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<{ id: string, rating: number, comment: string, date: string, userId: string, userName: string, userPhoto: string }[]>([]);
   const [animatingStar, setAnimatingStar] = useState<number | null>(null);
 
@@ -1968,12 +1969,19 @@ const Reviews = () => {
           {!user ? (
             <div className="text-center py-8">
               <p className="text-white/60 font-black uppercase text-xs tracking-widest mb-6">Sign in with Google to leave a review</p>
+              {authError && (
+                <p className="text-red-500/80 font-mono text-[10px] uppercase tracking-wider mb-4">
+                  {authError.includes('popup-closed') ? 'Login window was closed. Please try again.' : `Error: ${authError}`}
+                </p>
+              )}
               <button
                 onClick={async () => { 
                   playClick(); 
+                  setAuthError(null);
                   try {
                     await loginWithGoogle();
-                  } catch (error) {
+                  } catch (error: any) {
+                    setAuthError(error?.message || 'Login failed');
                     handleAuthError(error);
                   }
                 }}
