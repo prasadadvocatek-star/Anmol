@@ -14,38 +14,38 @@ export const BackgroundElements = () => {
         style={{
           left: '5%',
           top: '10%',
-          background: 'radial-gradient(circle, rgba(212, 255, 106, 0.07) 0%, rgba(212, 255, 106, 0) 75%)',
+          background: 'radial-gradient(circle, rgba(212, 255, 106, 0.05) 0%, rgba(212, 255, 106, 0) 70%)',
         }}
-        className="absolute w-[70vw] h-[70vw] blur-[140px] rounded-full"
+        className="absolute w-[60vw] h-[60vw] blur-[80px] rounded-full"
       />
       <motion.div 
         animate={{
           x: [0, -60, 60, 0],
           y: [0, 50, -50, 0],
-          scale: [1, 1.2, 1.4, 1],
+          scale: [1, 1.2, 1.1, 1],
         }}
         transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         style={{
-          right: '0%',
+          right: '-10%',
           bottom: '10%',
-          background: 'radial-gradient(circle, rgba(29, 61, 47, 0.6) 0%, rgba(29, 61, 47, 0) 80%)',
+          background: 'radial-gradient(circle, rgba(29, 61, 47, 0.4) 0%, rgba(29, 61, 47, 0) 80%)',
         }}
-        className="absolute w-[60vw] h-[60vw] blur-[100px] rounded-full"
+        className="absolute w-[50vw] h-[50vw] blur-[70px] rounded-full"
       />
 
       <motion.div 
         animate={{
           x: [0, 40, -40, 0],
           y: [0, 30, -30, 0],
-          opacity: [0.2, 0.4, 0.2],
+          opacity: [0.1, 0.3, 0.1],
         }}
         transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
         style={{
           left: '35%',
           top: '35%',
-          background: 'radial-gradient(circle, rgba(212, 255, 106, 0.04) 0%, rgba(212, 255, 106, 0) 65%)',
+          background: 'radial-gradient(circle, rgba(212, 255, 106, 0.03) 0%, rgba(212, 255, 106, 0) 65%)',
         }}
-        className="absolute w-[50vw] h-[50vw] blur-[150px] rounded-full"
+        className="absolute w-[40vw] h-[40vw] blur-[100px] rounded-full"
       />
 
       {/* Floating Particles/Dust */}

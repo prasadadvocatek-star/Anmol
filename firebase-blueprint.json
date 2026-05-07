@@ -1,0 +1,25 @@
+{
+  "entities": {
+    "Review": {
+      "title": "Review",
+      "description": "A user review for the portfolio",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "comment": { "type": "string", "maxLength": 1000 },
+        "userId": { "type": "string", "description": "The UID of the user who wrote the review" },
+        "userName": { "type": "string", "description": "Display name of the reviewer" },
+        "userPhoto": { "type": "string", "description": "Profile picture of the reviewer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["rating", "comment", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Public reviews collection"
+    }
+  }
+}

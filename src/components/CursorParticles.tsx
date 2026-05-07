@@ -41,20 +41,21 @@ export const CursorParticles = () => {
         }
       }
 
-      particles.current.forEach((particle, index) => {
+      for (let i = particles.current.length - 1; i >= 0; i--) {
+        const particle = particles.current[i];
         particle.x += particle.speedX;
         particle.y += particle.speedY;
         particle.life -= 0.01;
 
         if (particle.life <= 0) {
-          particles.current.splice(index, 1);
+          particles.current.splice(i, 1);
         } else {
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-          ctx.fillStyle = particle.color.replace('0.3', (particle.life * 0.3).toString());
+          ctx.fillStyle = particle.color.replace('0.4', (particle.life * 0.4).toString());
           ctx.fill();
         }
-      });
+      }
 
       animationFrameId = requestAnimationFrame(updateParticles);
     };

@@ -1,9 +1,22 @@
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { Camera, ArrowRight, ArrowDown, ChevronRight, Menu, X, MessageCircle, Ghost, Play, ArrowLeft, ArrowUp, Mail, Linkedin, MessageSquare, Volume2, VolumeX, Star, Trash2, Send } from 'lucide-react';
+import { Camera, ArrowRight, ArrowDown, ChevronRight, Menu, X, MessageCircle, Ghost, Play, ArrowLeft, ArrowUp, Mail, Linkedin, MessageSquare, Volume2, VolumeX, Star, Trash2, Send, LogIn, LogOut } from 'lucide-react';
 import { useState, useEffect, ReactNode, MouseEvent, useRef, useCallback } from 'react';
 import { cn } from '@/src/lib/utils';
 import { CursorParticles } from './components/CursorParticles';
 import { BackgroundElements } from './components/BackgroundElements';
+import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  collection, 
+  onSnapshot, 
+  addDoc, 
+  deleteDoc, 
+  doc, 
+  serverTimestamp, 
+  query, 
+  orderBy,
+  Timestamp
+} from 'firebase/firestore';
 
 // --- Assets ---
 const SOUNDS = {
@@ -1750,7 +1763,7 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void, key?: string }) 
           tap anywhere to view
         </motion.h2>
 
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-neon/5 rounded-full blur-[100px] -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-neon/5 rounded-full blur-[60px] -z-10" />
       </motion.div>
 
       {/* Decorative corners */}
@@ -1837,15 +1850,55 @@ const BackToTop = ({ hide }: { hide: boolean }) => {
   );
 };
 
+const ScrollProgress = () => {
+  const { scrollYProgress } = useScroll();
+  return (
+    <motion.div 
+      className="fixed top-0 left-0 right-0 h-[3px] bg-neon z-[110] origin-left shadow-[0_0_15px_rgba(212,255,106,0.5)]"
+      style={{ scaleX: scrollYProgress }}
+    />
+  );
+};
+
 const Reviews = () => {
   const { playClick, playSwipe, playHover } = useSound();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [reviews, setReviews] = useState<{ id: string, rating: number, comment: string, date: string }[]>([
-    { id: '1', rating: 5, comment: "Absolutely insane edits! The flow and timing are perfect.", date: "2 hours ago" },
-    { id: '2', rating: 4, comment: "Great work on the gaming montages.", date: "5 hours ago" }
-  ]);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [reviews, setReviews] = useState<{ id: string, rating: number, comment: string, date: string, userId: string, userName: string, userPhoto: string }[]>([]);
   const [animatingStar, setAnimatingStar] = useState<number | null>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setIsAdmin(u?.email === "prasadadvocatek@gmail.com");
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt as Timestamp;
+        return {
+          id: doc.id,
+          rating: data.rating,
+          comment: data.comment,
+          userId: data.userId,
+          userName: data.userName || 'Anonymous',
+          userPhoto: data.userPhoto || '',
+          date: createdAt ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(createdAt.toDate()) : 'Recent'
+        };
+      });
+      setReviews(docs);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'reviews');
+    });
+    return () => unsub();
+  }, []);
 
   const mcBlocks = [
     { label: 'Dirt', color: 'bg-[#795548]' },      // 1 Star
@@ -1866,23 +1919,35 @@ const Reviews = () => {
     }
   };
 
-  const addReview = () => {
-    if (!comment.trim() || rating === 0) return;
+  const addReview = async () => {
+    if (!comment.trim() || rating === 0 || !user) return;
     playClick();
-    const newReview = {
-      id: Math.random().toString(36).substr(2, 9),
+    
+    const reviewData = {
       rating,
       comment,
-      date: 'Just now'
+      userId: user.uid,
+      userName: user.displayName || 'Anonymous',
+      userPhoto: user.photoURL || '',
+      createdAt: serverTimestamp()
     };
-    setReviews([newReview, ...reviews]);
-    setComment('');
-    setRating(0);
+
+    try {
+      await addDoc(collection(db, 'reviews'), reviewData);
+      setComment('');
+      setRating(0);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'reviews');
+    }
   };
 
-  const deleteReview = (id: string) => {
+  const deleteReview = async (id: string) => {
     playSwipe();
-    setReviews(reviews.filter(r => r.id !== id));
+    try {
+      await deleteDoc(doc(db, 'reviews', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `reviews/${id}`);
+    }
   };
 
   return (
@@ -1896,75 +1961,102 @@ const Reviews = () => {
       >
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-7xl font-display font-black text-neon uppercase tracking-tighter mb-4">Reviews</h2>
-          <p className="text-white/40 font-mono text-sm uppercase tracking-widest tracking-widest">Share your thoughts on my work</p>
+          <p className="text-white/40 font-mono text-sm uppercase tracking-widest">Real-time feedback powered by Firebase</p>
         </div>
 
         <div className="bg-olive/40 border border-neon/10 rounded-[2rem] p-8 md:p-12 mb-12 backdrop-blur-md">
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-white/60 font-black uppercase text-xs tracking-widest">Rate the experience</p>
-              <div className="flex gap-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => handleRating(star)}
-                    onMouseEnter={playHover}
-                    className="relative group h-12 w-12 flex items-center justify-center"
-                  >
-                    <AnimatePresence mode="wait">
-                      {animatingStar === star ? (
-                        <motion.div
-                          key="block"
-                          initial={{ scale: 0, rotate: -45 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          exit={{ scale: 0, rotate: 45 }}
-                          className={cn(
-                            "absolute inset-0 rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center p-1 border-2 border-black/20",
-                            mcBlocks[star - 1].color
-                          )}
-                        >
-                          <div className="w-full h-full border border-white/20 rounded-sm" />
-                          <span className="absolute text-[8px] font-black uppercase text-black/40 pointer-events-none">
-                            {mcBlocks[star - 1].label}
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="star"
-                          initial={{ scale: 0.8 }}
-                          animate={{ scale: 1 }}
-                        >
-                          <Star 
-                            className={cn(
-                              "w-10 h-10 transition-colors",
-                              star <= rating ? "fill-neon text-neon" : "text-white/10"
-                            )} 
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Leave a comment..."
-                className="w-full bg-forest/40 border border-neon/20 rounded-2xl p-6 text-white placeholder:text-white/10 focus:outline-none focus:border-neon transition-colors h-32 resize-none"
-              />
+          {!user ? (
+            <div className="text-center py-8">
+              <p className="text-white/60 font-black uppercase text-xs tracking-widest mb-6">Sign in with Google to leave a review</p>
               <button
-                onClick={addReview}
+                onClick={() => { playClick(); loginWithGoogle(); }}
                 onMouseEnter={playHover}
-                disabled={!comment.trim() || rating === 0}
-                className="absolute bottom-4 right-4 bg-neon text-forest p-3 rounded-xl disabled:opacity-30 disabled:grayscale hover:scale-105 active:scale-95 transition-all shadow-xl"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-neon text-forest rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-xl shadow-neon/20"
               >
-                <Send className="w-5 h-5" />
+                <LogIn className="w-4 h-4" />
+                Connect with Google
               </button>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-8">
+              <div className="flex flex-row justify-between items-center">
+                <div className="flex items-center gap-3">
+                  {user.photoURL && <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border border-neon/20" referrerPolicy="no-referrer" />}
+                  <span className="text-[10px] font-black uppercase text-white/60 tracking-widest">{user.displayName}</span>
+                </div>
+                <button 
+                  onClick={logout}
+                  className="text-[8px] font-black uppercase text-white/20 hover:text-red-500 transition-colors tracking-widest"
+                >
+                  Sign Out
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-white/60 font-black uppercase text-xs tracking-widest">Rate the experience</p>
+                <div className="flex gap-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => handleRating(star)}
+                      onMouseEnter={playHover}
+                      className="relative group h-12 w-12 flex items-center justify-center"
+                    >
+                      <AnimatePresence mode="wait">
+                        {animatingStar === star ? (
+                          <motion.div
+                            key="block"
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0, rotate: 45 }}
+                            className={cn(
+                              "absolute inset-0 rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center p-1 border-2 border-black/20",
+                              mcBlocks[star - 1].color
+                            )}
+                          >
+                            <div className="w-full h-full border border-white/20 rounded-sm" />
+                            <span className="absolute text-[8px] font-black uppercase text-black/40 pointer-events-none">
+                              {mcBlocks[star - 1].label}
+                            </span>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="star"
+                            initial={{ scale: 0.8 }}
+                            animate={{ scale: 1 }}
+                          >
+                            <Star 
+                              className={cn(
+                                "w-10 h-10 transition-colors",
+                                star <= rating ? "fill-neon text-neon" : "text-white/10"
+                              )} 
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative">
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Leave a comment..."
+                  className="w-full bg-forest/40 border border-neon/20 rounded-2xl p-6 text-white placeholder:text-white/10 focus:outline-none focus:border-neon transition-colors h-32 resize-none"
+                />
+                <button
+                  onClick={addReview}
+                  onMouseEnter={playHover}
+                  disabled={!comment.trim() || rating === 0}
+                  className="absolute bottom-4 right-4 bg-neon text-forest p-3 rounded-xl disabled:opacity-30 disabled:grayscale hover:scale-105 active:scale-95 transition-all shadow-xl"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -1978,20 +2070,31 @@ const Reviews = () => {
                 className="bg-white/5 border border-white/10 rounded-2xl p-6 group hover:border-neon/30 transition-colors"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className={cn("w-4 h-4", s <= review.rating ? "fill-neon text-neon" : "text-white/10")} />
-                    ))}
+                  <div className="flex items-center gap-4">
+                    {review.userPhoto && (
+                      <img src={review.userPhoto} alt="" className="w-8 h-8 rounded-full border border-white/10" referrerPolicy="no-referrer" />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">{review.userName}</span>
+                      <div className="flex gap-1 mt-1">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star key={s} className={cn("w-3 h-3", s <= review.rating ? "fill-neon text-neon" : "text-white/10")} />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-[10px] uppercase font-mono text-white/20">{review.date}</span>
-                    <button
-                      onClick={() => deleteReview(review.id)}
-                      onMouseEnter={playHover}
-                      className="text-white/10 hover:text-red-500 transition-colors p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {(user && (review.userId === user.uid || isAdmin)) && (
+                      <button
+                        onClick={() => deleteReview(review.id)}
+                        onMouseEnter={playHover}
+                        className="text-white/10 hover:text-red-500 transition-colors p-1"
+                        title="Delete review"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <p className="text-white/70 text-sm leading-relaxed">{review.comment}</p>
@@ -2012,6 +2115,8 @@ export default function App() {
 
   return (
     <div className="relative bg-forest overflow-x-hidden min-h-screen">
+      <ScrollProgress />
+      {!showSplash && <BackgroundElements />}
       <CursorParticles />
       {!showSplash && <Navbar onNavigate={setView} currentView={view} />}
       {!showSplash && <ScrollIndicator />}
@@ -2045,7 +2150,6 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <BackgroundElements />
             <main>
               <Hero onNavigate={setView} />
               <Works />
