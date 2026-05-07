@@ -47,3 +47,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
+
+export function handleAuthError(error: any) {
+  // Ignore "popup closed by user" as it's an expected user action
+  if (error?.code === 'auth/popup-closed-by-user' || error?.message?.includes('popup-closed-by-user')) {
+    console.log('Login cancelled by user');
+    return;
+  }
+  
+  console.error('Auth Error:', error);
+  throw error;
+}

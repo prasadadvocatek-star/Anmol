@@ -4,7 +4,7 @@ import { useState, useEffect, ReactNode, MouseEvent, useRef, useCallback } from 
 import { cn } from '@/src/lib/utils';
 import { CursorParticles } from './components/CursorParticles';
 import { BackgroundElements } from './components/BackgroundElements';
-import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
+import { auth, db, loginWithGoogle, logout, handleFirestoreError, handleAuthError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
   collection, 
@@ -1969,7 +1969,14 @@ const Reviews = () => {
             <div className="text-center py-8">
               <p className="text-white/60 font-black uppercase text-xs tracking-widest mb-6">Sign in with Google to leave a review</p>
               <button
-                onClick={() => { playClick(); loginWithGoogle(); }}
+                onClick={async () => { 
+                  playClick(); 
+                  try {
+                    await loginWithGoogle();
+                  } catch (error) {
+                    handleAuthError(error);
+                  }
+                }}
                 onMouseEnter={playHover}
                 className="inline-flex items-center gap-3 px-8 py-4 bg-neon text-forest rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-xl shadow-neon/20"
               >
