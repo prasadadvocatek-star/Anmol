@@ -1,5 +1,5 @@
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { Camera, ArrowRight, ArrowDown, ChevronRight, Menu, X, MessageCircle, Ghost, Play, ArrowLeft, Mail, Linkedin, MessageSquare, Volume2, VolumeX } from 'lucide-react';
+import { Camera, ArrowRight, ArrowDown, ChevronRight, Menu, X, MessageCircle, Ghost, Play, ArrowLeft, ArrowUp, Mail, Linkedin, MessageSquare, Volume2, VolumeX, Star, Trash2, Send } from 'lucide-react';
 import { useState, useEffect, ReactNode, MouseEvent, useRef, useCallback } from 'react';
 import { cn } from '@/src/lib/utils';
 import { CursorParticles } from './components/CursorParticles';
@@ -181,6 +181,7 @@ const Navbar = ({ onNavigate, currentView }: { onNavigate: (view: 'home' | 'port
 
           <button 
             onClick={() => { playClick(); setMobileMenuOpen(!mobileMenuOpen); }}
+            onMouseEnter={playHover}
             className="md:hidden text-neon p-2 hover:bg-white/10 rounded-full transition-colors"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -401,6 +402,8 @@ const Works = () => {
     { year: '2024', title: 'Vlog editing ( 2 years)', desc: '', highlight: false },
     { year: '2023', title: 'Gaming video editing (3 years)', desc: '', highlight: false },
     { year: '2022', title: 'Anime editing ( 4 years)', desc: '', highlight: false },
+    { year: '2023', title: 'Cinematic edit ( 2 years)', desc: '', highlight: false },
+    { year: '2025', title: 'Web designing (8 months)', desc: '', highlight: false },
   ];
 
   return (
@@ -527,13 +530,20 @@ const Gallery = ({ onNavigate, onPlayVideo, onViewImage, isPaused = false }: {
 
   return (
     <section id="gallery" className="py-32 px-6 relative">
-      <div className="max-w-7xl mx-auto">
+      <motion.div 
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-7xl mx-auto"
+      >
          <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
             <div className="flex flex-col gap-6">
               <div className="flex items-baseline gap-6">
                 <h2 className="text-7xl md:text-9xl font-display font-black text-off-white uppercase leading-[0.8] tracking-tighter">Gallery</h2>
                 <motion.button
                   whileHover={{ x: 10 }}
+                  onMouseEnter={playHover}
                   onClick={() => { playClick(); onNavigate('portfolio'); }}
                   className="hidden md:flex items-center gap-2 text-neon font-display font-black text-xs uppercase tracking-widest pb-4 group"
                 >
@@ -545,6 +555,7 @@ const Gallery = ({ onNavigate, onPlayVideo, onViewImage, isPaused = false }: {
                   <button
                     key={f}
                     onClick={() => { playSwipe(); setActiveFilter(f); }}
+                    onMouseEnter={playHover}
                     className={cn(
                       "relative text-[8px] uppercase font-black tracking-[0.2em] transition-all pb-1",
                       activeFilter === f ? "text-neon" : "text-neon/20 hover:text-neon/50"
@@ -611,6 +622,7 @@ const Gallery = ({ onNavigate, onPlayVideo, onViewImage, isPaused = false }: {
          <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
+           onMouseEnter={playHover}
            className="w-full aspect-[2/1] bg-olive border border-neon/10 rounded-[2rem] overflow-hidden group/featured cursor-pointer"
            onClick={() => { 
              playClick(); 
@@ -637,7 +649,7 @@ const Gallery = ({ onNavigate, onPlayVideo, onViewImage, isPaused = false }: {
              </div>
            </LiquidGlassWrapper>
          </motion.div>
-      </div>
+       </motion.div>
     </section>
   );
 };
@@ -943,7 +955,7 @@ const VideoPreview = ({ src, className, size = 'md', paused = false }: { src: st
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { playClick } = useSound();
+  const { playClick, playHover } = useSound();
 
   useEffect(() => {
     if (videoRef.current) {
@@ -1010,6 +1022,7 @@ const VideoPreview = ({ src, className, size = 'md', paused = false }: { src: st
       {hasStarted && (
         <button
           onClick={toggleMute}
+          onMouseEnter={playHover}
           className={cn(
             "absolute bg-neon text-forest rounded-full hover:scale-110 active:scale-95 transition-all shadow-xl z-20 backdrop-blur-sm",
             size === 'sm' ? "bottom-2 right-2 p-1.5" : "bottom-6 right-6 p-3"
@@ -1027,7 +1040,7 @@ const VideoPreview = ({ src, className, size = 'md', paused = false }: { src: st
 };
 
 const VideoModal = ({ src, onClose, title }: { src: string, onClose: () => void, title: string }) => {
-  const { playClick, playWhoosh } = useSound();
+  const { playClick, playWhoosh, playHover } = useSound();
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1072,6 +1085,7 @@ const VideoModal = ({ src, onClose, title }: { src: string, onClose: () => void,
             </div>
             <button 
               onClick={() => { playClick(); onClose(); }}
+              onMouseEnter={playHover}
               className="px-8 py-3 bg-neon text-forest rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform"
             >
               Close Preview
@@ -1110,6 +1124,7 @@ const VideoModal = ({ src, onClose, title }: { src: string, onClose: () => void,
         />
         <button
           onClick={() => { playClick(); onClose(); }}
+          onMouseEnter={playHover}
           className="absolute top-4 right-4 md:top-8 md:right-8 p-3 md:p-5 bg-neon text-forest rounded-full hover:scale-110 transition-transform z-40 shadow-xl"
         >
           <X className="w-5 h-5 md:w-7 md:h-7" strokeWidth={3} />
@@ -1125,7 +1140,7 @@ const VideoModal = ({ src, onClose, title }: { src: string, onClose: () => void,
 };
 
 const ImageModal = ({ src, onClose, title }: { src: string, onClose: () => void, title: string }) => {
-  const { playClick, playWhoosh } = useSound();
+  const { playClick, playWhoosh, playHover } = useSound();
 
   useEffect(() => {
     playWhoosh();
@@ -1158,6 +1173,7 @@ const ImageModal = ({ src, onClose, title }: { src: string, onClose: () => void,
         </div>
         <button
           onClick={() => { playClick(); onClose(); }}
+          onMouseEnter={playHover}
           className="absolute top-4 right-4 md:top-8 md:right-8 p-3 md:p-5 bg-neon text-forest rounded-full hover:scale-110 transition-transform z-40 shadow-xl"
         >
           <X className="w-5 h-5 md:w-7 md:h-7" strokeWidth={3} />
@@ -1206,6 +1222,7 @@ const PortfolioPage = ({ onBack, isPaused = false }: { onBack: () => void, isPau
       <div className="max-w-7xl mx-auto">
         <motion.button
           onClick={() => { playClick(); onBack(); }}
+          onMouseEnter={playHover}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-3 text-neon font-display font-black text-xs uppercase tracking-widest mb-16 hover:gap-5 transition-all group"
@@ -1240,6 +1257,7 @@ const PortfolioPage = ({ onBack, isPaused = false }: { onBack: () => void, isPau
               <button
                 key={f}
                 onClick={() => { playSwipe(); setActiveFilter(f); }}
+                onMouseEnter={playHover}
                 className={cn(
                   "relative z-10 px-6 py-2 rounded-full text-[10px] uppercase font-black tracking-widest transition-all",
                   activeFilter === f ? "text-forest" : "text-neon/40 hover:text-neon"
@@ -1771,6 +1789,221 @@ const ScrollIndicator = () => {
   );
 };
 
+const BackToTop = ({ hide }: { hide: boolean }) => {
+  const { scrollY } = useScroll();
+  const [isVisible, setIsVisible] = useState(false);
+  const { playClick, playHover } = useSound();
+
+  useEffect(() => {
+    return scrollY.on("change", (latest) => {
+      setIsVisible(latest > 500);
+    });
+  }, [scrollY]);
+
+  const scrollToTop = () => {
+    playClick();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <AnimatePresence>
+      {isVisible && !hide && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.5, y: 20 }}
+          whileHover={{ 
+            scale: 1.1, 
+            boxShadow: "0 0 30px rgba(212, 255, 106, 0.4)",
+            y: -5
+          }}
+          whileTap={{ scale: 0.9 }}
+          onClick={scrollToTop}
+          onMouseEnter={playHover}
+          className="fixed bottom-8 right-8 z-[100] p-4 bg-neon text-forest rounded-full shadow-2xl transition-all border border-neon/20 group"
+          aria-label="Back to top"
+        >
+          <div className="relative">
+             <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform" strokeWidth={3} />
+             <motion.div 
+               animate={{ opacity: [0.5, 1, 0.5] }}
+               transition={{ duration: 2, repeat: Infinity }}
+               className="absolute inset-0 bg-neon blur-md -z-10"
+             />
+          </div>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+};
+
+const Reviews = () => {
+  const { playClick, playSwipe, playHover } = useSound();
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [reviews, setReviews] = useState<{ id: string, rating: number, comment: string, date: string }[]>([
+    { id: '1', rating: 5, comment: "Absolutely insane edits! The flow and timing are perfect.", date: "2 hours ago" },
+    { id: '2', rating: 4, comment: "Great work on the gaming montages.", date: "5 hours ago" }
+  ]);
+  const [animatingStar, setAnimatingStar] = useState<number | null>(null);
+
+  const mcBlocks = [
+    { label: 'Dirt', color: 'bg-[#795548]' },      // 1 Star
+    { label: 'Stone', color: 'bg-[#9e9e9e]' },     // 2 Stars
+    { label: 'Iron', color: 'bg-[#e0e0e0]' },      // 3 Stars
+    { label: 'Gold', color: 'bg-[#ffd700]' },      // 4 Stars
+    { label: 'Diamond', color: 'bg-[#00e5ff]' }    // 5 Stars
+  ];
+
+  const handleRating = (r: number) => {
+    playClick();
+    if (rating === r) {
+      setRating(0);
+    } else {
+      setRating(r);
+      setAnimatingStar(r);
+      setTimeout(() => setAnimatingStar(null), 1000);
+    }
+  };
+
+  const addReview = () => {
+    if (!comment.trim() || rating === 0) return;
+    playClick();
+    const newReview = {
+      id: Math.random().toString(36).substr(2, 9),
+      rating,
+      comment,
+      date: 'Just now'
+    };
+    setReviews([newReview, ...reviews]);
+    setComment('');
+    setRating(0);
+  };
+
+  const deleteReview = (id: string) => {
+    playSwipe();
+    setReviews(reviews.filter(r => r.id !== id));
+  };
+
+  return (
+    <section className="py-32 px-6 relative bg-forest/40">
+      <motion.div 
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-4xl mx-auto"
+      >
+        <div className="text-center mb-16">
+          <h2 className="text-5xl md:text-7xl font-display font-black text-neon uppercase tracking-tighter mb-4">Reviews</h2>
+          <p className="text-white/40 font-mono text-sm uppercase tracking-widest tracking-widest">Share your thoughts on my work</p>
+        </div>
+
+        <div className="bg-olive/40 border border-neon/10 rounded-[2rem] p-8 md:p-12 mb-12 backdrop-blur-md">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-white/60 font-black uppercase text-xs tracking-widest">Rate the experience</p>
+              <div className="flex gap-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => handleRating(star)}
+                    onMouseEnter={playHover}
+                    className="relative group h-12 w-12 flex items-center justify-center"
+                  >
+                    <AnimatePresence mode="wait">
+                      {animatingStar === star ? (
+                        <motion.div
+                          key="block"
+                          initial={{ scale: 0, rotate: -45 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          exit={{ scale: 0, rotate: 45 }}
+                          className={cn(
+                            "absolute inset-0 rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center p-1 border-2 border-black/20",
+                            mcBlocks[star - 1].color
+                          )}
+                        >
+                          <div className="w-full h-full border border-white/20 rounded-sm" />
+                          <span className="absolute text-[8px] font-black uppercase text-black/40 pointer-events-none">
+                            {mcBlocks[star - 1].label}
+                          </span>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="star"
+                          initial={{ scale: 0.8 }}
+                          animate={{ scale: 1 }}
+                        >
+                          <Star 
+                            className={cn(
+                              "w-10 h-10 transition-colors",
+                              star <= rating ? "fill-neon text-neon" : "text-white/10"
+                            )} 
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Leave a comment..."
+                className="w-full bg-forest/40 border border-neon/20 rounded-2xl p-6 text-white placeholder:text-white/10 focus:outline-none focus:border-neon transition-colors h-32 resize-none"
+              />
+              <button
+                onClick={addReview}
+                onMouseEnter={playHover}
+                disabled={!comment.trim() || rating === 0}
+                className="absolute bottom-4 right-4 bg-neon text-forest p-3 rounded-xl disabled:opacity-30 disabled:grayscale hover:scale-105 active:scale-95 transition-all shadow-xl"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <AnimatePresence mode="popLayout">
+            {reviews.map((review) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white/5 border border-white/10 rounded-2xl p-6 group hover:border-neon/30 transition-colors"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className={cn("w-4 h-4", s <= review.rating ? "fill-neon text-neon" : "text-white/10")} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] uppercase font-mono text-white/20">{review.date}</span>
+                    <button
+                      onClick={() => deleteReview(review.id)}
+                      onMouseEnter={playHover}
+                      className="text-white/10 hover:text-red-500 transition-colors p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-white/70 text-sm leading-relaxed">{review.comment}</p>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </section>
+  );
+};
+
 export default function App() {
   const [view, setView] = useState<'home' | 'portfolio' | 'contact' | 'testimonials' | 'terms' | 'policies' | 'cookies'>('home');
   const [showSplash, setShowSplash] = useState(true);
@@ -1782,6 +2015,7 @@ export default function App() {
       <CursorParticles />
       {!showSplash && <Navbar onNavigate={setView} currentView={view} />}
       {!showSplash && <ScrollIndicator />}
+      {!showSplash && <BackToTop hide={!!selectedVideo || !!selectedImage} />}
       
       <AnimatePresence>
         {selectedVideo && (
@@ -1823,6 +2057,7 @@ export default function App() {
                 isPaused={!!selectedVideo || !!selectedImage} 
               />
               <Contact onNavigate={setView} />
+              <Reviews />
             </main>
             <Footer onNavigate={setView} />
           </motion.div>
