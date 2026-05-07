@@ -685,7 +685,7 @@ const Contact = ({ onNavigate }: { onNavigate: (view: 'home' | 'portfolio' | 'co
             <div className="relative z-10 text-center">
               <motion.span variants={fADE_UP} className="text-neon font-display font-black text-[10px] uppercase tracking-[0.5em] mb-6 block">About</motion.span>
               <motion.h2 variants={fADE_UP} className="text-3xl md:text-5xl font-display font-black text-white mb-10 uppercase leading-snug tracking-tighter max-w-4xl mx-auto">
-                hi, i am <span className="text-neon">anmol</span> from India, Uttar Pradesh, With over 4 years of experience and 20+ projects completed. if you re intrested <span className="text-transparent" style={{ WebkitTextStroke: '1px rgba(212,255,106,1)' }}>purchase your order</span> or click on start conversation
+                hi, i am <span className="text-neon">anmol</span> from India, Uttar Pradesh, With over 4 years of experience and 20+ projects completed. if you're interested <span className="text-transparent" style={{ WebkitTextStroke: '1px rgba(212,255,106,1)' }}>purchase your order</span> or click on start conversation
               </motion.h2>
               <div className="flex flex-col items-center gap-10">
                   <motion.button
